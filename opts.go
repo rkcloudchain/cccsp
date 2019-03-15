@@ -1,5 +1,10 @@
 package cccsp
 
+import (
+	"hash"
+	"io"
+)
+
 const (
 	// SHA2 is an identifier for SHA2 hash family
 	SHA2 = "SHA2"
@@ -42,3 +47,30 @@ var (
 	AES24    KeyGenAlgorithm = "AES24"
 	AES32    KeyGenAlgorithm = "AES32"
 )
+
+// EncryptionAlgorithm defines encryption algorithm
+type EncryptionAlgorithm string
+
+// vars
+var (
+	AES EncryptionAlgorithm = "AES"
+	RSA EncryptionAlgorithm = "RSA"
+)
+
+// AESCBCPKCS7Opts contains options for AES encryption in CBC mode with PKCS7 padding.
+type AESCBCPKCS7Opts struct {
+	// IV is the initialization vector to be used by the underlying cihper.
+	IV []byte
+
+	// PRNG is an interface of a PRNG to be used by the underlying cihper.
+	PRNG io.Reader
+}
+
+// RSAOAEPOpts contains options for RSA-OAEP encryption.
+type RSAOAEPOpts struct {
+	Label []byte
+	Hash  hash.Hash
+}
+
+// RSAPKCS1v15Opts contains options for RSA and the padding scheme from PKCS#1 v1.5
+type RSAPKCS1v15Opts struct{}

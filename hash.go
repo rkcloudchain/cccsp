@@ -15,3 +15,7 @@ func (h *hasher) Hash(msg []byte) ([]byte, error) {
 	}
 	return hash.Sum(nil), nil
 }
+
+func (h *hasher) GetHash() hash.Hash {
+	return h.hash()
+}

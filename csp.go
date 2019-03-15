@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"hash"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/sha3"
@@ -16,6 +17,8 @@ type csp struct {
 	ks            KeyStore
 	keyGenerators map[string]KeyGenerator
 	hashers       map[string]Hasher
+	encryptors    map[string]Encryptor
+	decryptors    map[string]Decryptor
 }
 
 // New creates a csp instance
@@ -23,9 +26,11 @@ func New() (CCCSP, error) {
 	csp := &csp{
 		keyGenerators: make(map[string]KeyGenerator),
 		hashers:       make(map[string]Hasher),
+		encryptors:    make(map[string]Encryptor),
+		decryptors:    make(map[string]Decryptor),
 	}
 
-	return nil, nil
+	return csp, nil
 }
 
 func (csp *csp) KeyGenerate(algorithm KeyGenAlgorithm, ephemeral bool) (Key, error) {
@@ -53,6 +58,60 @@ func (csp *csp) KeyGenerate(algorithm KeyGenAlgorithm, ephemeral bool) (Key, err
 	return k, nil
 }
 
+func (csp *csp) Encrypt(k Key, plaintext []byte, opts EncrypterOpts) ([]byte, error) {
+	if k == nil {
+		return nil, errors.New("Invalid key, it must not be nil")
+	}
+
+	switch opts.(type) {
+	case RSAOAEPOpts, *RSAOAEPOpts, RSAPKCS1v15Opts, *RSAPKCS1v15Opts:
+		_, ok := k.(*rsaPrivateKey)
+		if !ok {
+			return nil, errors.New("Key type is incorrect, you must use rsa key")
+		}
+
+		encryptor := csp.encryptors[string(RSA)]
+		return encryptor.Encrypt(k, plaintext, opts)
+	case AESCBCPKCS7Opts, *AESCBCPKCS7Opts:
+		_, ok := k.(*aesPrivateKey)
+		if !ok {
+			return nil, errors.New("Key type is incorrect, you must use aes key")
+		}
+
+		encryptor := csp.encryptors[string(AES)]
+		return encryptor.Encrypt(k, plaintext, opts)
+	default:
+		return nil, errors.New("Unsupported encryption options")
+	}
+}
+
+func (csp *csp) Decrypt(k Key, ciphertext []byte, opts DecrypterOpts) ([]byte, error) {
+	if k == nil {
+		return nil, errors.New("Invalid key, it must not be nil")
+	}
+
+	switch opts.(type) {
+	case RSAOAEPOpts, *RSAOAEPOpts, RSAPKCS1v15Opts, *RSAPKCS1v15Opts:
+		_, ok := k.(*rsaPrivateKey)
+		if !ok {
+			return nil, errors.New("Key type is incorrect, you must use rsa key")
+		}
+
+		decryptor := csp.decryptors[string(RSA)]
+		return decryptor.Decrypt(k, ciphertext, opts)
+	case AESCBCPKCS7Opts, *AESCBCPKCS7Opts:
+		_, ok := k.(*aesPrivateKey)
+		if !ok {
+			return nil, errors.New("Key type is incorrect, you must use aes key")
+		}
+
+		decryptor := csp.decryptors[string(AES)]
+		return decryptor.Decrypt(k, ciphertext, opts)
+	default:
+		return nil, errors.New("Unsupported encryption options")
+	}
+}
+
 // Hash hashes messages using specified hash family.
 func (csp *csp) Hash(msg []byte, family HashAlgorithm) ([]byte, error) {
 	if family == "" {
@@ -70,6 +129,19 @@ func (csp *csp) Hash(msg []byte, family HashAlgorithm) ([]byte, error) {
 	}
 
 	return digest, nil
+}
+
+func (csp *csp) GetHash(algo HashAlgorithm) (hash.Hash, error) {
+	if algo == "" {
+		return nil, errors.New("Invalid algorithm, it must not be empty")
+	}
+
+	hasher, found := csp.hashers[string(algo)]
+	if !found {
+		return nil, errors.Errorf("Unsupported hash algorithm: %s", algo)
+	}
+
+	return hasher.GetHash(), nil
 }
 
 func (csp *csp) initialize() {
@@ -95,6 +167,12 @@ func (csp *csp) initialize() {
 	csp.addWrapper(string(AES16), &aesKeyGenerator{length: 16})
 	csp.addWrapper(string(AES24), &aesKeyGenerator{length: 24})
 	csp.addWrapper(string(AES32), &aesKeyGenerator{length: 32})
+
+	csp.addWrapper(string(AES), &aescbcpkcs7Encryptor{})
+	csp.addWrapper(string(RSA), &rsaEncryptor{})
+
+	csp.addWrapper(string(AES), &aescbcpkcs7Decryptor{})
+	csp.addWrapper(string(RSA), &rsaDecryptor{})
 }
 
 func (csp *csp) addWrapper(t string, w interface{}) error {

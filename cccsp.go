@@ -1,22 +1,14 @@
 package cccsp
 
-import "crypto"
+import (
+	"crypto"
+	"hash"
+)
 
 // Key represents a cryptographic key
 type Key interface {
 	// Raw converts this key to its byte representation.
 	Raw() ([]byte, error)
-}
-
-// KeyOptions contains options for key with a CSP.
-type KeyOptions interface {
-	// Algorithm returns the key algorithm.
-	Algorithm() string
-}
-
-// HashOptions contains options for hashing with a CSP.
-type HashOptions interface {
-	Algorithm() string
 }
 
 // EncrypterOpts contains options for encrypting with a CSP.
@@ -33,6 +25,9 @@ type CCCSP interface {
 
 	// Hash hashes messages using specified hash family.
 	Hash(msg []byte, family HashAlgorithm) ([]byte, error)
+
+	// GetHash returns and instance of hash.Hash with hash alogrithm
+	GetHash(algo HashAlgorithm) (hash.Hash, error)
 
 	// Sign signs digest using key k.
 	Sign(k Key, digest []byte, opts crypto.SignerOpts) ([]byte, error)
