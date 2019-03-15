@@ -21,13 +21,13 @@ type DecrypterOpts interface{}
 // the implementation of cryptographic standards and algorithms
 type CCCSP interface {
 	// KeyGenerate generates a key.
-	KeyGenerate(algorithm KeyGenAlgorithm, ephemeral bool) (Key, error)
+	KeyGenerate(algorithm string, ephemeral bool) (Key, error)
 
 	// Hash hashes messages using specified hash family.
-	Hash(msg []byte, family HashAlgorithm) ([]byte, error)
+	Hash(msg []byte, family string) ([]byte, error)
 
 	// GetHash returns and instance of hash.Hash with hash alogrithm
-	GetHash(algo HashAlgorithm) (hash.Hash, error)
+	GetHash(algo string) (hash.Hash, error)
 
 	// Sign signs digest using key k.
 	Sign(k Key, digest []byte, opts crypto.SignerOpts) ([]byte, error)

@@ -1,4 +1,4 @@
-package cccsp
+package crypto
 
 import (
 	"bytes"
@@ -8,11 +8,13 @@ import (
 	"io"
 
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/cccsp"
+	"github.com/rkcloudchain/cccsp/key"
 )
 
 type aescbcpkcs7Encryptor struct{}
 
-func (e *aescbcpkcs7Encryptor) Encrypt(k Key, plaintext []byte, opts EncrypterOpts) ([]byte, error) {
+func (e *aescbcpkcs7Encryptor) Encrypt(k cccsp.Key, plaintext []byte, opts cccsp.EncrypterOpts) ([]byte, error) {
 	switch o := opts.(type) {
 	case *AESCBCPKCS7Opts:
 		if len(o.IV) != 0 && o.PRNG != nil {
@@ -21,12 +23,12 @@ func (e *aescbcpkcs7Encryptor) Encrypt(k Key, plaintext []byte, opts EncrypterOp
 
 		tmp := pkcs7Padding(plaintext)
 		if len(o.IV) != 0 {
-			return aesCBCEncryptWithIV(o.IV, k.(*aesPrivateKey).privKey, tmp)
+			return aesCBCEncryptWithIV(o.IV, k.(*key.AESPrivateKey).PrivateKey(), tmp)
 		} else if o.PRNG != nil {
-			return aesCBCEncryptWithRand(o.PRNG, k.(*aesPrivateKey).privKey, tmp)
+			return aesCBCEncryptWithRand(o.PRNG, k.(*key.AESPrivateKey).PrivateKey(), tmp)
 		}
 
-		return aesCBCEncryptWithRand(rand.Reader, k.(*aesPrivateKey).privKey, tmp)
+		return aesCBCEncryptWithRand(rand.Reader, k.(*key.AESPrivateKey).PrivateKey(), tmp)
 	case AESCBCPKCS7Opts:
 		return e.Encrypt(k, plaintext, &o)
 	default:
@@ -87,14 +89,14 @@ func aesCBCEncryptWithRand(prng io.Reader, key, s []byte) ([]byte, error) {
 
 type aescbcpkcs7Decryptor struct{}
 
-func (d *aescbcpkcs7Decryptor) Decrypt(k Key, ciphertext []byte, opts DecrypterOpts) ([]byte, error) {
+func (d *aescbcpkcs7Decryptor) Decrypt(k cccsp.Key, ciphertext []byte, opts cccsp.DecrypterOpts) ([]byte, error) {
 	if opts == nil {
 		return nil, errors.New("Invalid options, must be different from nil")
 	}
 
 	switch opts.(type) {
 	case *AESCBCPKCS7Opts, AESCBCPKCS7Opts:
-		pt, err := aesCBCDecrypt(k.(*aesPrivateKey).privKey, ciphertext)
+		pt, err := aesCBCDecrypt(k.(*key.AESPrivateKey).PrivateKey(), ciphertext)
 		if err == nil {
 			return pkcs7UnPadding(pt)
 		}
