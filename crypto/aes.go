@@ -23,12 +23,12 @@ func (e *aescbcpkcs7Encryptor) Encrypt(k cccsp.Key, plaintext []byte, opts cccsp
 
 		tmp := pkcs7Padding(plaintext)
 		if len(o.IV) != 0 {
-			return aesCBCEncryptWithIV(o.IV, k.(*key.AESPrivateKey).PrivateKey(), tmp)
+			return aesCBCEncryptWithIV(o.IV, k.(*key.AESPrivateKey).PrivateKey, tmp)
 		} else if o.PRNG != nil {
-			return aesCBCEncryptWithRand(o.PRNG, k.(*key.AESPrivateKey).PrivateKey(), tmp)
+			return aesCBCEncryptWithRand(o.PRNG, k.(*key.AESPrivateKey).PrivateKey, tmp)
 		}
 
-		return aesCBCEncryptWithRand(rand.Reader, k.(*key.AESPrivateKey).PrivateKey(), tmp)
+		return aesCBCEncryptWithRand(rand.Reader, k.(*key.AESPrivateKey).PrivateKey, tmp)
 	case AESCBCPKCS7Opts:
 		return e.Encrypt(k, plaintext, &o)
 	default:
@@ -96,7 +96,7 @@ func (d *aescbcpkcs7Decryptor) Decrypt(k cccsp.Key, ciphertext []byte, opts cccs
 
 	switch opts.(type) {
 	case *AESCBCPKCS7Opts, AESCBCPKCS7Opts:
-		pt, err := aesCBCDecrypt(k.(*key.AESPrivateKey).PrivateKey(), ciphertext)
+		pt, err := aesCBCDecrypt(k.(*key.AESPrivateKey).PrivateKey, ciphertext)
 		if err == nil {
 			return pkcs7UnPadding(pt)
 		}

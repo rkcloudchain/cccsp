@@ -25,15 +25,10 @@ func New(privKey interface{}) (cccsp.Key, error) {
 
 // AESPrivateKey contains a aes private key
 type AESPrivateKey struct {
-	privKey []byte
+	PrivateKey []byte
 }
 
 // Raw converts this key to its byte representation.
 func (k *AESPrivateKey) Raw() ([]byte, error) {
 	return nil, errors.New("Not supported")
-}
-
-// PrivateKey returns the aes private key
-func (k *AESPrivateKey) PrivateKey() []byte {
-	return k.privKey
 }
