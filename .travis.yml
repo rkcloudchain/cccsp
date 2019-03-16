@@ -5,5 +5,9 @@ matrix:
     - go: 1.11.x
     - go: 1.12.x
 
+branches:
+  only:
+    - master
+
 script:
   - go test -t -v ./...
