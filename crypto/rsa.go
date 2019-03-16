@@ -40,13 +40,23 @@ func (e *rsaEncryptor) Encrypt(k cccsp.Key, plaintext []byte, opts cccsp.Encrypt
 		return nil, errors.New("Invalid options, must be different from nil")
 	}
 
+	var pk *rsa.PublicKey
+	switch kk := k.(type) {
+	case *key.RSAPrivateKey:
+		pk = &kk.PrivateKey.PublicKey
+	case *key.RSAPublicKey:
+		pk = kk.PublicKey
+	default:
+		return nil, errors.New("Invalid key type, must be *key.RSAPrivateKey or *key.RSAPublicKey")
+	}
+
 	switch o := opts.(type) {
 	case *RSAOAEPOpts:
-		return rsa.EncryptOAEP(o.Hash, rand.Reader, &k.(*key.RSAPrivateKey).PublicKey, plaintext, o.Label)
+		return rsa.EncryptOAEP(o.Hash, rand.Reader, pk, plaintext, o.Label)
 	case RSAOAEPOpts:
 		return e.Encrypt(k, plaintext, &o)
 	case *RSAPKCS1v15Opts:
-		return rsa.EncryptPKCS1v15(rand.Reader, &k.(*key.RSAPrivateKey).PublicKey, plaintext)
+		return rsa.EncryptPKCS1v15(rand.Reader, pk, plaintext)
 	case RSAPKCS1v15Opts:
 		return e.Encrypt(k, plaintext, &o)
 	default:
@@ -61,13 +71,23 @@ func (d *rsaDecryptor) Decrypt(k cccsp.Key, ciphertext []byte, opts cccsp.Decryp
 		return nil, errors.New("Invalid options, must be different from nil")
 	}
 
+	var sk *rsa.PrivateKey
+	switch kk := k.(type) {
+	case *key.RSAPublicKey:
+		return nil, errors.New("Invalid key type, must be *key.RSAPrivateKey, not *key.RSAPublicKey")
+	case *key.RSAPrivateKey:
+		sk = kk.PrivateKey
+	default:
+		return nil, errors.New("Invalid key type, must be *key.RSAPrivateKey")
+	}
+
 	switch o := opts.(type) {
 	case *RSAOAEPOpts:
-		return rsa.DecryptOAEP(o.Hash, rand.Reader, k.(*key.RSAPrivateKey).PrivateKey, ciphertext, o.Label)
+		return rsa.DecryptOAEP(o.Hash, rand.Reader, sk, ciphertext, o.Label)
 	case RSAOAEPOpts:
 		return d.Decrypt(k, ciphertext, &o)
 	case *RSAPKCS1v15Opts:
-		return rsa.DecryptPKCS1v15(rand.Reader, k.(*key.RSAPrivateKey).PrivateKey, ciphertext)
+		return rsa.DecryptPKCS1v15(rand.Reader, sk, ciphertext)
 	case RSAPKCS1v15Opts:
 		return d.Decrypt(k, ciphertext, &o)
 	default:

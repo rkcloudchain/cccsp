@@ -19,8 +19,12 @@ func New(privKey interface{}) (cccsp.Key, error) {
 		return &RSAPrivateKey{k}, nil
 	case *ecdsa.PublicKey:
 		return &ECDSAPublicKey{k}, nil
+	case ecdsa.PublicKey:
+		return &ECDSAPublicKey{&k}, nil
 	case *rsa.PublicKey:
 		return &RSAPublicKey{k}, nil
+	case rsa.PublicKey:
+		return &RSAPublicKey{&k}, nil
 	case []byte:
 		return &AESPrivateKey{k}, nil
 	default:
