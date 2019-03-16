@@ -30,16 +30,20 @@ func signECDSA(k *ecdsa.PrivateKey, digest []byte) ([]byte, error) {
 	return marshalECDSASignature(r, s)
 }
 
-type ecdsaPrivateKeyVerifier struct{}
+type ecdsaVerifier struct{}
 
-func (v *ecdsaPrivateKeyVerifier) Verify(k cccsp.Key, signature, digest []byte, opts crypto.SignerOpts) (bool, error) {
-	return verifyECDSA(&k.(*key.ECDSAPrivateKey).PublicKey, signature, digest)
-}
+func (v *ecdsaVerifier) Verify(k cccsp.Key, signature, digest []byte, opts crypto.SignerOpts) (bool, error) {
+	var pk *ecdsa.PublicKey
+	switch kk := k.(type) {
+	case *key.ECDSAPrivateKey:
+		pk = &kk.PublicKey
+	case *key.ECDSAPublicKey:
+		pk = kk.PublicKey
+	default:
+		return false, errors.New("Invalid key type, must be *key.ECDSAPrivateKey or *key.ECDSAPublicKey")
+	}
 
-type ecdsaPublicKeyVerifier struct{}
-
-func (v *ecdsaPublicKeyVerifier) Verify(k cccsp.Key, signature, digest []byte, opts crypto.SignerOpts) (bool, error) {
-	return verifyECDSA(k.(*key.ECDSAPublicKey).PublicKey, signature, digest)
+	return verifyECDSA(pk, signature, digest)
 }
 
 func verifyECDSA(k *ecdsa.PublicKey, signature, digest []byte) (bool, error) {

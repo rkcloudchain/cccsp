@@ -23,18 +23,12 @@ func NewSigner(algo Algorithm) cccsp.Signer {
 }
 
 // NewVerifier creates a new verifier
-func NewVerifier(algo Algorithm, public bool) cccsp.Verifier {
+func NewVerifier(algo Algorithm) cccsp.Verifier {
 	if algo == ECDSA {
-		if public {
-			return &ecdsaPublicKeyVerifier{}
-		}
-		return &ecdsaPrivateKeyVerifier{}
+		return &ecdsaVerifier{}
 	}
 	if algo == RSA {
-		if public {
-			return &rsaPublicKeyVerifier{}
-		}
-		return &rsaPrivateKeyVerifier{}
+		return &rsaVerifier{}
 	}
 
 	panic(errors.Errorf("Unsupported alogrithm %s", algo))
@@ -50,34 +44,29 @@ func (s *rsaSigner) Sign(k cccsp.Key, digest []byte, opts crypto.SignerOpts) ([]
 	return k.(*key.RSAPrivateKey).PrivateKey.Sign(rand.Reader, digest, opts)
 }
 
-type rsaPrivateKeyVerifier struct{}
+type rsaVerifier struct{}
 
-func (v *rsaPrivateKeyVerifier) Verify(k cccsp.Key, signature, digest []byte, opts crypto.SignerOpts) (bool, error) {
+func (v *rsaVerifier) Verify(k cccsp.Key, signature, digest []byte, opts crypto.SignerOpts) (bool, error) {
 	if opts == nil {
 		return false, errors.New("Invalid options, it must not be nil")
 	}
+
+	var pk *rsa.PublicKey
+	switch kk := k.(type) {
+	case *key.RSAPrivateKey:
+		pk = &kk.PublicKey
+	case *key.RSAPublicKey:
+		pk = kk.PublicKey
+	default:
+		return false, errors.New("Invalid key type, must be *key.RSAPrivateKey or *key.RSAPublicKey")
+	}
+
 	switch opts.(type) {
 	case *rsa.PSSOptions:
-		err := rsa.VerifyPSS(&k.(*key.RSAPrivateKey).PublicKey, opts.(*rsa.PSSOptions).Hash, digest, signature, opts.(*rsa.PSSOptions))
+		err := rsa.VerifyPSS(pk, opts.(*rsa.PSSOptions).Hash, digest, signature, opts.(*rsa.PSSOptions))
 		return err == nil, err
 	default:
-		err := rsa.VerifyPKCS1v15(&k.(*key.RSAPrivateKey).PublicKey, opts.HashFunc(), digest, signature)
-		return err == nil, err
-	}
-}
-
-type rsaPublicKeyVerifier struct{}
-
-func (v *rsaPublicKeyVerifier) Verify(k cccsp.Key, signature, digest []byte, opts crypto.SignerOpts) (bool, error) {
-	if opts == nil {
-		return false, errors.New("Invalid options, it must not be nil")
-	}
-	switch opts.(type) {
-	case *rsa.PSSOptions:
-		err := rsa.VerifyPSS(k.(*key.RSAPublicKey).PublicKey, opts.(*rsa.PSSOptions).Hash, digest, signature, opts.(*rsa.PSSOptions))
-		return err == nil, err
-	default:
-		err := rsa.VerifyPKCS1v15(k.(*key.RSAPublicKey).PublicKey, opts.HashFunc(), digest, signature)
+		err := rsa.VerifyPKCS1v15(pk, opts.HashFunc(), digest, signature)
 		return err == nil, err
 	}
 }

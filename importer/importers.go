@@ -75,7 +75,7 @@ func (*ecdsaPublicKeyImporter) KeyImport(raw interface{}) (cccsp.Key, error) {
 	switch r := raw.(type) {
 	case []byte:
 		if len(r) == 0 {
-			return nil, errors.New("Invalid raw, it must not be nil")
+			return nil, errors.New("Invalid raw material, it must not be nil")
 		}
 
 		cert, err := x509.ParsePKIXPublicKey(r)
@@ -193,5 +193,10 @@ func (*x509CertificateKeyImporter) KeyImport(raw interface{}) (cccsp.Key, error)
 		return nil, errors.New("Invalid raw material, expected *x509.Certificate")
 	}
 
-	return key.New(x509Cert.PublicKey)
+	switch x509Cert.PublicKey.(type) {
+	case *rsa.PublicKey, *ecdsa.PublicKey:
+		return key.New(x509Cert.PublicKey)
+	default:
+		return nil, errors.New("Certificate's public key type not recognized. Supported keys: [ECDSA, RSA]")
+	}
 }

@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-	"fmt"
 	"hash"
 
 	"github.com/pkg/errors"
@@ -179,14 +178,10 @@ func (csp *csp) Verify(k cccsp.Key, signature, digest []byte, opts crypto.Signer
 
 	var keyStr string
 	switch k.(type) {
-	case *key.RSAPrivateKey:
-		keyStr = fmt.Sprintf("%s_Private", signer.RSA)
-	case *key.RSAPublicKey:
-		keyStr = fmt.Sprintf("%s_Public", signer.RSA)
-	case *key.ECDSAPrivateKey:
-		keyStr = fmt.Sprintf("%s_Private", signer.ECDSA)
-	case *key.ECDSAPublicKey:
-		keyStr = fmt.Sprintf("%s_Public", signer.ECDSA)
+	case *key.RSAPrivateKey, *key.RSAPublicKey:
+		keyStr = string(signer.RSA)
+	case *key.ECDSAPrivateKey, *key.ECDSAPublicKey:
+		keyStr = string(signer.ECDSA)
 	default:
 		return false, errors.New("Unsupported verify options")
 	}
@@ -260,10 +255,8 @@ func (csp *csp) initialize() {
 	csp.addWrapper(string(signer.ECDSA), signer.NewSigner(signer.ECDSA))
 	csp.addWrapper(string(signer.RSA), signer.NewSigner(signer.RSA))
 
-	csp.addWrapper(fmt.Sprintf("%s_Public", signer.ECDSA), signer.NewVerifier(signer.ECDSA, true))
-	csp.addWrapper(fmt.Sprintf("%s_Private", signer.ECDSA), signer.NewVerifier(signer.ECDSA, false))
-	csp.addWrapper(fmt.Sprintf("%s_Public", signer.RSA), signer.NewVerifier(signer.RSA, true))
-	csp.addWrapper(fmt.Sprintf("%s_Private", signer.RSA), signer.NewVerifier(signer.RSA, false))
+	csp.addWrapper(string(signer.ECDSA), signer.NewVerifier(signer.ECDSA))
+	csp.addWrapper(string(signer.RSA), signer.NewVerifier(signer.RSA))
 
 	csp.addWrapper(string(importer.AES256), importer.New(importer.AES256))
 	csp.addWrapper(string(importer.HMAC), importer.New(importer.HMAC))
