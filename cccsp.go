@@ -12,6 +12,14 @@ type Key interface {
 
 	// Identifier returns the identifier of this key
 	Identifier() []byte
+
+	// Private returns true if this key is a private key.
+	// false otherwise
+	Private() bool
+
+	// Public returns the corresponding public key part of
+	// an asymmetric public/private key pair.
+	Public() (Key, error)
 }
 
 // EncrypterOpts contains options for encrypting with a CSP.

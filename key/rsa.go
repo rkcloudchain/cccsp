@@ -7,6 +7,7 @@ import (
 	"math/big"
 
 	"github.com/pkg/errors"
+	"github.com/rkcloudchain/cccsp"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -35,6 +36,18 @@ func (k *RSAPrivateKey) Identifier() []byte {
 	hash := sha3.New256()
 	hash.Write(raw)
 	return hash.Sum(nil)
+}
+
+// Private returns true if this key is a private key.
+// false otherwise
+func (k *RSAPrivateKey) Private() bool {
+	return true
+}
+
+// Public returns the corresponding public key part of
+// an asymmetric public/private key pair.
+func (k *RSAPrivateKey) Public() (cccsp.Key, error) {
+	return &RSAPublicKey{&k.PublicKey}, nil
 }
 
 // RSAPublicKey contains a rsa public key
@@ -66,4 +79,16 @@ func (k *RSAPublicKey) Identifier() []byte {
 	hash := sha3.New256()
 	hash.Write(raw)
 	return hash.Sum(nil)
+}
+
+// Private returns true if this key is a private key.
+// false otherwise
+func (k *RSAPublicKey) Private() bool {
+	return false
+}
+
+// Public returns the corresponding public key part of
+// an asymmetric public/private key pair.
+func (k *RSAPublicKey) Public() (cccsp.Key, error) {
+	return k, nil
 }

@@ -45,3 +45,15 @@ func (k *AESPrivateKey) Identifier() []byte {
 	hash.Write(k.PrivateKey)
 	return hash.Sum(nil)
 }
+
+// Private returns true if this key is a private key.
+// false otherwise
+func (k *AESPrivateKey) Private() bool {
+	return true
+}
+
+// Public returns the corresponding public key part of
+// an asymmetric public/private key pair.
+func (k *AESPrivateKey) Public() (cccsp.Key, error) {
+	return nil, errors.New("Cannot call this method on a symmetric key")
+}
