@@ -29,4 +29,10 @@ func TestECDSASignerSign(t *testing.T) {
 	valid, err := verifier.Verify(kk, sigma, msg, nil)
 	assert.NoError(t, err)
 	assert.True(t, valid)
+
+	pk, err := kk.Public()
+	assert.NoError(t, err)
+	valid, err = verifier.Verify(pk, sigma, msg, nil)
+	assert.NoError(t, err)
+	assert.True(t, valid)
 }
