@@ -9,6 +9,9 @@ import (
 type Key interface {
 	// Raw converts this key to its byte representation.
 	Raw() ([]byte, error)
+
+	// Identifier returns the identifier of this key
+	Identifier() []byte
 }
 
 // EncrypterOpts contains options for encrypting with a CSP.

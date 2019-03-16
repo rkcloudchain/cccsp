@@ -2,9 +2,11 @@ package key
 
 import (
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/x509"
 
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/sha3"
 )
 
 // ECDSAPrivateKey contains a ecdsa private key
@@ -15,6 +17,18 @@ type ECDSAPrivateKey struct {
 // Raw converts this key to its byte representation.
 func (k *ECDSAPrivateKey) Raw() ([]byte, error) {
 	return nil, errors.New("Not supported")
+}
+
+// Identifier returns the identifier of this key
+func (k *ECDSAPrivateKey) Identifier() []byte {
+	if k.PrivateKey == nil {
+		return nil
+	}
+
+	raw := elliptic.Marshal(k.Curve, k.PublicKey.X, k.PublicKey.Y)
+	hash := sha3.New256()
+	hash.Write(raw)
+	return hash.Sum(nil)
 }
 
 // ECDSAPublicKey contains a ecdsa public key
@@ -35,4 +49,14 @@ func (k *ECDSAPublicKey) Raw() ([]byte, error) {
 	return raw, nil
 }
 
+// Identifier returns the identifier of this key
+func (k *ECDSAPublicKey) Identifier() []byte {
+	if k.PublicKey == nil {
+		return nil
+	}
 
+	raw := elliptic.Marshal(k.PublicKey.Curve, k.PublicKey.X, k.PublicKey.Y)
+	hash := sha3.New256()
+	hash.Write(raw)
+	return hash.Sum(nil)
+}

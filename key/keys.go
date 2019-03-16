@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rkcloudchain/cccsp"
+	"golang.org/x/crypto/sha3"
 )
 
 // New returns a cccsp Key instance
@@ -16,6 +17,10 @@ func New(privKey interface{}) (cccsp.Key, error) {
 		return &ECDSAPrivateKey{k}, nil
 	case *rsa.PrivateKey:
 		return &RSAPrivateKey{k}, nil
+	case *ecdsa.PublicKey:
+		return &ECDSAPublicKey{k}, nil
+	case *rsa.PublicKey:
+		return &RSAPublicKey{k}, nil
 	case []byte:
 		return &AESPrivateKey{k}, nil
 	default:
@@ -31,4 +36,12 @@ type AESPrivateKey struct {
 // Raw converts this key to its byte representation.
 func (k *AESPrivateKey) Raw() ([]byte, error) {
 	return nil, errors.New("Not supported")
+}
+
+// Identifier returns the identifier of this key
+func (k *AESPrivateKey) Identifier() []byte {
+	hash := sha3.New256()
+	hash.Write([]byte{0x01})
+	hash.Write(k.PrivateKey)
+	return hash.Sum(nil)
 }
