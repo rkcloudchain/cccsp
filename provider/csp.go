@@ -30,8 +30,14 @@ type csp struct {
 }
 
 // New creates a csp instance
-func New() (cccsp.CCCSP, error) {
+func New(keyStorePath string) (cccsp.CCCSP, error) {
+	ks, err := NewFileKEyStore(keyStorePath)
+	if err != nil {
+		return nil, err
+	}
+
 	csp := &csp{
+		ks:            ks,
 		keyGenerators: make(map[string]cccsp.KeyGenerator),
 		hashers:       make(map[string]cccsp.Hasher),
 		encryptors:    make(map[string]cccsp.Encryptor),
