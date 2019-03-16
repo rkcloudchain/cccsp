@@ -9,5 +9,11 @@ branches:
   only:
     - master
 
-script:
+before_install:
   - go test -t -v ./...
+
+script:
+  - ./go.test.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -t ab667539-44f8-404b-86fd-c8d24a7fe0c3
