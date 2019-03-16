@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rkcloudchain/cccsp"
 	"github.com/rkcloudchain/cccsp/key"
+	"github.com/rkcloudchain/cccsp/util"
 )
 
 // NewFileKEyStore instantiated a file-based key store at a given position
@@ -438,28 +439,7 @@ func pemToPrivateKey(raw []byte) (interface{}, error) {
 		return nil, errors.Errorf("Failed decoding PEM, block must be different from nil, [% x]", raw)
 	}
 
-	return derToPrivateKey(block.Bytes)
-}
-
-func derToPrivateKey(der []byte) (key interface{}, err error) {
-	if key, err = x509.ParsePKCS1PrivateKey(der); err == nil {
-		return key, nil
-	}
-
-	if key, err = x509.ParsePKCS8PrivateKey(der); err == nil {
-		switch key.(type) {
-		case *rsa.PrivateKey, *ecdsa.PrivateKey:
-			return
-		default:
-			return nil, errors.New("Found unknown private key type in PKCS#8 wrapping")
-		}
-	}
-
-	if key, err = x509.ParseECPrivateKey(der); err == nil {
-		return
-	}
-
-	return nil, errors.New("Invalid key type, the DER must contain an rsa.PrivateKey or ecdsa.PrivateKey")
+	return util.DERToPrivateKey(block.Bytes)
 }
 
 func pemToPublicKey(raw []byte) (interface{}, error) {

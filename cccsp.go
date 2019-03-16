@@ -34,6 +34,12 @@ type CCCSP interface {
 	// KeyGenerate generates a key.
 	KeyGenerate(algorithm string, ephemeral bool) (Key, error)
 
+	// KeyImport imports a key from its raw representation.
+	KeyImport(raw interface{}, alogrithm string, ephemeral bool) (Key, error)
+
+	// GetKey returns the key this CSP associates to
+	GetKey(id []byte) (Key, error)
+
 	// Hash hashes messages using specified hash family.
 	Hash(msg []byte, family string) ([]byte, error)
 

@@ -35,3 +35,8 @@ type Signer interface {
 type Verifier interface {
 	Verify(k Key, signature, digest []byte, opts crypto.SignerOpts) (bool, error)
 }
+
+// KeyImporter is a CCCSP-like interface that provides key import algorithm
+type KeyImporter interface {
+	KeyImport(raw interface{}) (Key, error)
+}

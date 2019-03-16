@@ -12,6 +12,7 @@ import (
 	"github.com/rkcloudchain/cccsp"
 	rkcrypt "github.com/rkcloudchain/cccsp/crypto"
 	rkhash "github.com/rkcloudchain/cccsp/hash"
+	"github.com/rkcloudchain/cccsp/importer"
 	"github.com/rkcloudchain/cccsp/key"
 	"github.com/rkcloudchain/cccsp/keygen"
 	"github.com/rkcloudchain/cccsp/signer"
@@ -22,6 +23,7 @@ import (
 type csp struct {
 	ks            cccsp.KeyStore
 	keyGenerators map[string]cccsp.KeyGenerator
+	keyImporters  map[string]cccsp.KeyImporter
 	hashers       map[string]cccsp.Hasher
 	encryptors    map[string]cccsp.Encryptor
 	decryptors    map[string]cccsp.Decryptor
@@ -39,6 +41,7 @@ func New(keyStorePath string) (cccsp.CCCSP, error) {
 	csp := &csp{
 		ks:            ks,
 		keyGenerators: make(map[string]cccsp.KeyGenerator),
+		keyImporters:  make(map[string]cccsp.KeyImporter),
 		hashers:       make(map[string]cccsp.Hasher),
 		encryptors:    make(map[string]cccsp.Encryptor),
 		decryptors:    make(map[string]cccsp.Decryptor),
@@ -70,6 +73,40 @@ func (csp *csp) KeyGenerate(algorithm string, ephemeral bool) (cccsp.Key, error)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed storing key [%s]", algorithm)
 		}
+	}
+
+	return k, nil
+}
+
+func (csp *csp) KeyImport(raw interface{}, alogrithm string, ephemeral bool) (cccsp.Key, error) {
+	if raw == nil {
+		return nil, errors.New("Invalid raw, it must not be nil")
+	}
+
+	keyImporter, found := csp.keyImporters[alogrithm]
+	if !found {
+		return nil, errors.Errorf("Unsupported key import algorithm %s", alogrithm)
+	}
+
+	k, err := keyImporter.KeyImport(raw)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed importing key")
+	}
+
+	if !ephemeral {
+		err = csp.ks.StoreKey(k)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed storing imported key")
+		}
+	}
+
+	return k, nil
+}
+
+func (csp *csp) GetKey(id []byte) (cccsp.Key, error) {
+	k, err := csp.ks.LoadKey(id)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed getting key for Identifier [%x]", id)
 	}
 
 	return k, nil
@@ -227,6 +264,14 @@ func (csp *csp) initialize() {
 	csp.addWrapper(fmt.Sprintf("%s_Private", signer.ECDSA), signer.NewVerifier(signer.ECDSA, false))
 	csp.addWrapper(fmt.Sprintf("%s_Public", signer.RSA), signer.NewVerifier(signer.RSA, true))
 	csp.addWrapper(fmt.Sprintf("%s_Private", signer.RSA), signer.NewVerifier(signer.RSA, false))
+
+	csp.addWrapper(string(importer.AES256), importer.New(importer.AES256))
+	csp.addWrapper(string(importer.HMAC), importer.New(importer.HMAC))
+	csp.addWrapper(string(importer.ECDSAPRIKEY), importer.New(importer.ECDSAPRIKEY))
+	csp.addWrapper(string(importer.ECDSAPUBKEY), importer.New(importer.ECDSAPUBKEY))
+	csp.addWrapper(string(importer.RSAPRIKEY), importer.New(importer.RSAPRIKEY))
+	csp.addWrapper(string(importer.RSAPUBKEY), importer.New(importer.RSAPUBKEY))
+	csp.addWrapper(string(importer.X509CERT), importer.New(importer.X509CERT))
 }
 
 func (csp *csp) addWrapper(t string, w interface{}) error {
@@ -239,6 +284,8 @@ func (csp *csp) addWrapper(t string, w interface{}) error {
 	switch dt := w.(type) {
 	case cccsp.KeyGenerator:
 		csp.keyGenerators[t] = dt
+	case cccsp.KeyImporter:
+		csp.keyImporters[t] = dt
 	case cccsp.Hasher:
 		csp.hashers[t] = dt
 	case cccsp.Encryptor:
