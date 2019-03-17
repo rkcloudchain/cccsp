@@ -17,7 +17,7 @@ func TestRSAKeyGen(t *testing.T) {
 
 	rsaKey := k.(*key.RSAPrivateKey)
 	assert.NotNil(t, rsaKey)
-	assert.Equal(t, 2048, rsaKey.Size())
+	assert.Equal(t, 2048, rsaKey.Size()*8)
 
 	kg = NewKeyGenerator(RSA3072)
 	k, err = kg.KeyGenerate()
@@ -27,7 +27,7 @@ func TestRSAKeyGen(t *testing.T) {
 
 	rsaKey = k.(*key.RSAPrivateKey)
 	assert.NotNil(t, rsaKey)
-	assert.Equal(t, 3072, rsaKey.Size())
+	assert.Equal(t, 3072, rsaKey.Size()*8)
 
 	kg = NewKeyGenerator(RSA4096)
 	k, err = kg.KeyGenerate()
