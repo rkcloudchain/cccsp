@@ -218,3 +218,62 @@ func TestGetHash(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Unsupported hash algorithm")
 }
+
+func TestAESKeyStore(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	k, err := csp.KeyGenerate("AES32", false)
+	assert.NoError(t, err)
+	assert.NotNil(t, k)
+
+	id := k.Identifier()
+	assert.NotNil(t, id)
+
+	k2, err := csp.GetKey(id)
+	assert.NoError(t, err)
+	assert.NotNil(t, k2)
+
+	aesK1, ok := k.(*key.AESPrivateKey)
+	assert.True(t, ok)
+	aesK2, ok := k2.(*key.AESPrivateKey)
+	assert.True(t, ok)
+
+	assert.Equal(t, aesK1.PrivateKey, aesK2.PrivateKey)
+}
+
+func TestPublicKeyStore(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	k, err := csp.KeyGenerate("RSA2048", false)
+	assert.NoError(t, err)
+	assert.NotNil(t, k)
+
+	pk, err := k.Public()
+	assert.NoError(t, err)
+	assert.NotNil(t, pk)
+
+	raw, err := pk.Raw()
+	assert.NoError(t, err)
+	assert.NotNil(t, raw)
+
+	_, err = csp.KeyImport(raw, "RSAPUBKEY", false)
+	assert.NoError(t, err)
+
+	id := pk.Identifier()
+	assert.NotNil(t, id)
+
+	k2, err := csp.GetKey(id)
+	assert.NoError(t, err)
+	assert.False(t, k2.Private())
+
+	rsaK1, ok := pk.(*key.RSAPublicKey)
+	assert.True(t, ok)
+	rsaK2, ok := k2.(*key.RSAPublicKey)
+	assert.True(t, ok)
+
+	assert.Equal(t, rsaK1.Size(), rsaK2.Size())
+	assert.Equal(t, rsaK1.N, rsaK2.N)
+	assert.Equal(t, rsaK1.E, rsaK2.E)
+}

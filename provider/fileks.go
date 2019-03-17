@@ -121,7 +121,7 @@ func (ks *fileKeyStore) StoreKey(k cccsp.Key) (err error) {
 }
 
 func (ks *fileKeyStore) loadPublicKey(alias string) (interface{}, error) {
-	path := filepath.Join(alias, "pk")
+	path := ks.getPathForAlias(alias, "pk")
 	raw, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
