@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# Copyright Rockontrol Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 
 set -e
 echo "" > coverage.txt
