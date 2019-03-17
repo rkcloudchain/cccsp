@@ -15,7 +15,7 @@ func TestAESEncryptAndDecryptWithPRNG(t *testing.T) {
 	rand.Read(keyBytes)
 
 	var ptext = []byte("bla bla")
-	encryptor := &aescbcpkcs7Encryptor{}
+	encryptor := NewEncryptor(AES)
 
 	k, err := key.New(keyBytes)
 	require.NoError(t, err)
@@ -23,8 +23,26 @@ func TestAESEncryptAndDecryptWithPRNG(t *testing.T) {
 	encrypted, err := encryptor.Encrypt(k, ptext, &AESCBCPKCS7Opts{PRNG: rand.Reader})
 	assert.NoError(t, err)
 
-	decryptor := &aescbcpkcs7Decryptor{}
+	decryptor := NewDecryptor(AES)
 	decrypted, err := decryptor.Decrypt(k, encrypted, &AESCBCPKCS7Opts{PRNG: rand.Reader})
+	assert.NoError(t, err)
+	assert.Equal(t, ptext, decrypted)
+}
+func TestAESEncryptAndDecryptWithPRNG2(t *testing.T) {
+	keyBytes := make([]byte, 32)
+	rand.Read(keyBytes)
+
+	var ptext = []byte("bla bla")
+	encryptor := NewEncryptor(AES)
+
+	k, err := key.New(keyBytes)
+	require.NoError(t, err)
+
+	encrypted, err := encryptor.Encrypt(k, ptext, AESCBCPKCS7Opts{PRNG: rand.Reader})
+	assert.NoError(t, err)
+
+	decryptor := NewDecryptor(AES)
+	decrypted, err := decryptor.Decrypt(k, encrypted, AESCBCPKCS7Opts{PRNG: rand.Reader})
 	assert.NoError(t, err)
 	assert.Equal(t, ptext, decrypted)
 }
@@ -37,7 +55,7 @@ func TestAESEncryptAndDecryptWithIV(t *testing.T) {
 	rand.Read(ivBytes)
 
 	var ptext = []byte("bla1 bla1")
-	encryptor := &aescbcpkcs7Encryptor{}
+	encryptor := NewEncryptor(AES)
 
 	k, err := key.New(keyBytes)
 	require.NoError(t, err)
@@ -45,7 +63,7 @@ func TestAESEncryptAndDecryptWithIV(t *testing.T) {
 	encrypted, err := encryptor.Encrypt(k, ptext, &AESCBCPKCS7Opts{IV: ivBytes})
 	assert.NoError(t, err)
 
-	decryptor := &aescbcpkcs7Decryptor{}
+	decryptor := NewDecryptor(AES)
 	decrypted, err := decryptor.Decrypt(k, encrypted, &AESCBCPKCS7Opts{IV: ivBytes})
 	assert.NoError(t, err)
 	assert.Equal(t, ptext, decrypted)
@@ -59,7 +77,7 @@ func TestAESEncryptWithWrongIV(t *testing.T) {
 	rand.Read(ivBytes)
 
 	var ptext = []byte("bla bla bla")
-	encryptor := &aescbcpkcs7Encryptor{}
+	encryptor := NewEncryptor(AES)
 
 	k, err := key.New(keyBytes)
 	require.NoError(t, err)
@@ -67,4 +85,22 @@ func TestAESEncryptWithWrongIV(t *testing.T) {
 	_, err = encryptor.Encrypt(k, ptext, &AESCBCPKCS7Opts{IV: ivBytes})
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid IV")
+}
+
+func TestAESEncryptWithRandReader(t *testing.T) {
+	keyBytes := make([]byte, 32)
+	rand.Read(keyBytes)
+
+	encryptor := NewEncryptor(AES)
+	k, err := key.New(keyBytes)
+	require.NoError(t, err)
+
+	var ptext = []byte("bla bla bla")
+	encrypted, err := encryptor.Encrypt(k, ptext, &AESCBCPKCS7Opts{})
+	assert.NoError(t, err)
+
+	decryptor := NewDecryptor(AES)
+	decrypted, err := decryptor.Decrypt(k, encrypted, &AESCBCPKCS7Opts{})
+	assert.NoError(t, err)
+	assert.Equal(t, ptext, decrypted)
 }

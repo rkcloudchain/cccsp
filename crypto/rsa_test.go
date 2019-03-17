@@ -21,14 +21,37 @@ func TestRSAEncryptAndDecrypt_OAEP(t *testing.T) {
 	ptext := []byte("bla bla message")
 	opts := &RSAOAEPOpts{Hash: sha3.New256()}
 
-	encryptor := &rsaEncryptor{}
+	encryptor := NewEncryptor(RSA)
 	encrypted, err := encryptor.Encrypt(pk, ptext, opts)
 	assert.NoError(t, err)
 
 	sk, err := key.New(rsaKey)
 	require.NoError(t, err)
 
-	decryptor := &rsaDecryptor{}
+	decryptor := NewDecryptor(RSA)
+	decrypted, err := decryptor.Decrypt(sk, encrypted, opts)
+	assert.NoError(t, err)
+	assert.Equal(t, ptext, decrypted)
+}
+
+func TestRSAEncryptAndDecrypt_OAEP2(t *testing.T) {
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	pk, err := key.New(rsaKey.PublicKey)
+	require.NoError(t, err)
+
+	ptext := []byte("bla bla message")
+	opts := RSAOAEPOpts{Hash: sha3.New512()}
+
+	encryptor := NewEncryptor(RSA)
+	encrypted, err := encryptor.Encrypt(pk, ptext, opts)
+	assert.NoError(t, err)
+
+	sk, err := key.New(rsaKey)
+	require.NoError(t, err)
+
+	decryptor := NewDecryptor(RSA)
 	decrypted, err := decryptor.Decrypt(sk, encrypted, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, ptext, decrypted)
@@ -44,14 +67,14 @@ func TestRSAEncryptAndDecrypt_PKCS1v15(t *testing.T) {
 	ptext := []byte("bla bla message")
 	opts := &RSAPKCS1v15Opts{}
 
-	encryptor := &rsaEncryptor{}
+	encryptor := NewEncryptor(RSA)
 	encrypted, err := encryptor.Encrypt(pk, ptext, opts)
 	assert.NoError(t, err)
 
 	sk, err := key.New(rsaKey)
 	require.NoError(t, err)
 
-	decryptor := &rsaDecryptor{}
+	decryptor := NewDecryptor(RSA)
 	decrypted, err := decryptor.Decrypt(sk, encrypted, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, ptext, decrypted)
@@ -65,13 +88,13 @@ func TestRSAEncryptAndDecryptWithPrivateKey(t *testing.T) {
 	require.NoError(t, err)
 
 	ptext := []byte("bla bla message")
-	opts := &RSAPKCS1v15Opts{}
+	opts := RSAPKCS1v15Opts{}
 
-	encryptor := &rsaEncryptor{}
+	encryptor := NewEncryptor(RSA)
 	encrypted, err := encryptor.Encrypt(sk, ptext, opts)
 	assert.NoError(t, err)
 
-	decryptor := &rsaDecryptor{}
+	decryptor := NewDecryptor(RSA)
 	decrypted, err := decryptor.Decrypt(sk, encrypted, opts)
 	assert.NoError(t, err)
 	assert.Equal(t, ptext, decrypted)
@@ -84,8 +107,8 @@ func TestRSADecryptWithPublicKey(t *testing.T) {
 	pk, err := key.New(rsaKey.PublicKey)
 	require.NoError(t, err)
 
-	opts := &RSAPKCS1v15Opts{}
-	decryptor := &rsaDecryptor{}
+	opts := RSAPKCS1v15Opts{}
+	decryptor := NewDecryptor(RSA)
 	_, err = decryptor.Decrypt(pk, []byte("message"), opts)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid key type")
