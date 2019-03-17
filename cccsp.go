@@ -35,7 +35,7 @@ type CCCSP interface {
 	KeyGenerate(algorithm string, ephemeral bool) (Key, error)
 
 	// KeyImport imports a key from its raw representation.
-	KeyImport(raw interface{}, alogrithm string, ephemeral bool) (Key, error)
+	KeyImport(raw interface{}, algorithm string, ephemeral bool) (Key, error)
 
 	// GetKey returns the key this CSP associates to
 	GetKey(id []byte) (Key, error)
@@ -43,7 +43,7 @@ type CCCSP interface {
 	// Hash hashes messages using specified hash family.
 	Hash(msg []byte, family string) ([]byte, error)
 
-	// GetHash returns and instance of hash.Hash with hash alogrithm
+	// GetHash returns and instance of hash.Hash with hash algorithm
 	GetHash(algo string) (hash.Hash, error)
 
 	// Sign signs digest using key k.

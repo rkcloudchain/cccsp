@@ -31,7 +31,7 @@ func NewVerifier(algo Algorithm) cccsp.Verifier {
 		return &rsaVerifier{}
 	}
 
-	panic(errors.Errorf("Unsupported alogrithm %s", algo))
+	panic(errors.Errorf("Unsupported algorithm %s", algo))
 }
 
 type rsaSigner struct{}

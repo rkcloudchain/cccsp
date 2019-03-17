@@ -77,14 +77,14 @@ func (csp *csp) KeyGenerate(algorithm string, ephemeral bool) (cccsp.Key, error)
 	return k, nil
 }
 
-func (csp *csp) KeyImport(raw interface{}, alogrithm string, ephemeral bool) (cccsp.Key, error) {
+func (csp *csp) KeyImport(raw interface{}, algorithm string, ephemeral bool) (cccsp.Key, error) {
 	if raw == nil {
 		return nil, errors.New("Invalid raw, it must not be nil")
 	}
 
-	keyImporter, found := csp.keyImporters[alogrithm]
+	keyImporter, found := csp.keyImporters[algorithm]
 	if !found {
-		return nil, errors.Errorf("Unsupported key import algorithm %s", alogrithm)
+		return nil, errors.Errorf("Unsupported key import algorithm %s", algorithm)
 	}
 
 	k, err := keyImporter.KeyImport(raw)
