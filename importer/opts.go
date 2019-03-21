@@ -6,16 +6,13 @@ SPDX-License-Identifier: Apache-2.0
 
 package importer
 
-// Algorithm defines key import algorithm
-type Algorithm string
-
-// vars
-var (
-	AES256      Algorithm = "AES256"
-	HMAC        Algorithm = "HMAC"
-	ECDSAPRIKEY Algorithm = "ECDSAPRIKEY"
-	ECDSAPUBKEY Algorithm = "ECDSAPUBKEY"
-	RSAPRIKEY   Algorithm = "RSAPRIKEY"
-	RSAPUBKEY   Algorithm = "RSAPUBKEY"
-	X509CERT    Algorithm = "X509CERT"
+// consts
+const (
+	AES256      = "AES256"
+	HMAC        = "HMAC"
+	ECDSAPRIKEY = "ECDSAPRIKEY"
+	ECDSAPUBKEY = "ECDSAPUBKEY"
+	RSAPRIKEY   = "RSAPRIKEY"
+	RSAPUBKEY   = "RSAPUBKEY"
+	X509CERT    = "X509CERT"
 )

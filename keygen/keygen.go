@@ -18,7 +18,7 @@ import (
 )
 
 // NewKeyGenerator creates a new key generator
-func NewKeyGenerator(algo Algorithm) cccsp.KeyGenerator {
+func NewKeyGenerator(algo string) cccsp.KeyGenerator {
 	if algo == ECDSA256 {
 		return &ecdsaKeyGenerator{curve: elliptic.P256()}
 	}

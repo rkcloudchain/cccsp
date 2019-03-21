@@ -16,7 +16,7 @@ import (
 )
 
 // NewEncryptor creates a new encryptor
-func NewEncryptor(alog Algorithm) cccsp.Encryptor {
+func NewEncryptor(alog string) cccsp.Encryptor {
 	if alog == AES {
 		return &aescbcpkcs7Encryptor{}
 	}
@@ -28,7 +28,7 @@ func NewEncryptor(alog Algorithm) cccsp.Encryptor {
 }
 
 // NewDecryptor creates a new decryptor
-func NewDecryptor(alog Algorithm) cccsp.Decryptor {
+func NewDecryptor(alog string) cccsp.Decryptor {
 	if alog == AES {
 		return &aescbcpkcs7Decryptor{}
 	}

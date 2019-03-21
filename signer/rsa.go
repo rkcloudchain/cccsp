@@ -17,7 +17,7 @@ import (
 )
 
 // NewSigner creates a new signer
-func NewSigner(algo Algorithm) cccsp.Signer {
+func NewSigner(algo string) cccsp.Signer {
 	if algo == ECDSA {
 		return &ecdsaSigner{}
 	}
@@ -29,7 +29,7 @@ func NewSigner(algo Algorithm) cccsp.Signer {
 }
 
 // NewVerifier creates a new verifier
-func NewVerifier(algo Algorithm) cccsp.Verifier {
+func NewVerifier(algo string) cccsp.Verifier {
 	if algo == ECDSA {
 		return &ecdsaVerifier{}
 	}

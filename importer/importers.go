@@ -18,7 +18,7 @@ import (
 )
 
 // New returns creates a new KeyImporter
-func New(algo Algorithm) cccsp.KeyImporter {
+func New(algo string) cccsp.KeyImporter {
 	if algo == AES256 {
 		return &aes256KeyImporter{}
 	}

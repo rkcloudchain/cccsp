@@ -11,13 +11,10 @@ import (
 	"io"
 )
 
-// Algorithm defines encryption algorithm
-type Algorithm string
-
-// vars
-var (
-	AES Algorithm = "AES"
-	RSA Algorithm = "RSA"
+// consts
+const (
+	AES = "AES"
+	RSA = "RSA"
 )
 
 // AESCBCPKCS7Opts contains options for AES encryption in CBC mode with PKCS7 padding.
