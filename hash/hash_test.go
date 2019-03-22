@@ -14,7 +14,7 @@ import (
 )
 
 func TestHash(t *testing.T) {
-	h := NewHasher(sha3.New256)
+	h := New(sha3.New256)
 	msg := []byte("Hello World")
 	out, err := h.Hash(msg)
 	assert.NoError(t, err)

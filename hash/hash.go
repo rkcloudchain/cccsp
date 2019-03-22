@@ -15,8 +15,8 @@ type Hasher struct {
 	hash func() hash.Hash
 }
 
-// NewHasher creates a new Hasher
-func NewHasher(hash func() hash.Hash) *Hasher {
+// New creates a new Hasher
+func New(hash func() hash.Hash) *Hasher {
 	return &Hasher{hash: hash}
 }
 

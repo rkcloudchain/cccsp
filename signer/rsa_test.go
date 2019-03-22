@@ -90,3 +90,15 @@ func TestRSASignerSign_PKCS1v15(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, valid)
 }
+
+func TestErrorSignerAlgorithm(t *testing.T) {
+	assert.Panics(t, func() {
+		NewSigner("bac")
+	})
+}
+
+func TestErrorVerifierAlgorithm(t *testing.T) {
+	assert.Panics(t, func() {
+		NewVerifier("abc")
+	})
+}

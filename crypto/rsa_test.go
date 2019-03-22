@@ -119,3 +119,15 @@ func TestRSADecryptWithPublicKey(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid key type")
 }
+
+func TestErrorEncryptAlgorithm(t *testing.T) {
+	assert.Panics(t, func() {
+		NewEncryptor("abc")
+	})
+}
+
+func TestErrorDecryptAlgorithm(t *testing.T) {
+	assert.Panics(t, func() {
+		NewDecryptor("abc")
+	})
+}

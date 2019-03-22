@@ -17,8 +17,8 @@ import (
 	"github.com/rkcloudchain/cccsp/key"
 )
 
-// NewKeyGenerator creates a new key generator
-func NewKeyGenerator(algo string) cccsp.KeyGenerator {
+// New creates a new key generator
+func New(algo string) cccsp.KeyGenerator {
 	if algo == ECDSA256 {
 		return &ecdsaKeyGenerator{curve: elliptic.P256()}
 	}

@@ -93,7 +93,6 @@ func (*ecdsaPublicKeyImporter) KeyImport(raw interface{}) (cccsp.Key, error) {
 		if !ok {
 			return nil, errors.New("Failed casting to ECDSA public key, invalid raw material")
 		}
-
 		return key.New(pk)
 
 	case *ecdsa.PublicKey:
