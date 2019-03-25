@@ -167,7 +167,7 @@ func (csp *csp) Sign(k cccsp.Key, digest []byte, opts crypto.SignerOpts) ([]byte
 		s := csp.signers[string(signer.ECDSA)]
 		return s.Sign(k, digest, opts)
 	default:
-		return nil, errors.New("Unsupported sign options")
+		return nil, errors.New("Unsupported key type")
 	}
 }
 
