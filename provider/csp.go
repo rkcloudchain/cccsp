@@ -173,7 +173,7 @@ func (csp *csp) Sign(k cccsp.Key, digest []byte, opts crypto.SignerOpts) ([]byte
 
 func (csp *csp) Verify(k cccsp.Key, signature, digest []byte, opts crypto.SignerOpts) (bool, error) {
 	if k == nil {
-		return false, errors.New("Invalid Key, it must not be nil")
+		return false, errors.New("Invalid key, must not be nil")
 	}
 	if len(signature) == 0 {
 		return false, errors.New("Invalid signature, cannot be empty")
@@ -189,7 +189,7 @@ func (csp *csp) Verify(k cccsp.Key, signature, digest []byte, opts crypto.Signer
 	case *key.ECDSAPrivateKey, *key.ECDSAPublicKey:
 		keyStr = string(signer.ECDSA)
 	default:
-		return false, errors.New("Unsupported verify options")
+		return false, errors.New("Unsupported key type")
 	}
 
 	verifier := csp.verifiers[keyStr]

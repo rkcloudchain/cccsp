@@ -7,7 +7,10 @@ SPDX-License-Identifier: Apache-2.0
 package provider
 
 import (
+	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha512"
 	"fmt"
 	"io/ioutil"
@@ -282,4 +285,152 @@ func TestPublicKeyStore(t *testing.T) {
 	assert.Equal(t, rsaK1.Size(), rsaK2.Size())
 	assert.Equal(t, rsaK1.N, rsaK2.N)
 	assert.Equal(t, rsaK1.E, rsaK2.E)
+}
+
+func TestInvalidKeyGenerate(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	_, err = csp.KeyGenerate("", false)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid algorithm, it must not be empty")
+
+	_, err = csp.KeyGenerate("algorithm", false)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported algorithm")
+}
+
+func TestInvalidKeyImport(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	_, err = csp.KeyImport(nil, "algorithm", false)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid raw, it must not be nil")
+
+	_, err = csp.KeyImport([]byte{0}, "algorithm", false)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported key import algorithm")
+}
+
+func TestInvalidEncrypt(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	_, err = csp.Encrypt(nil, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key, it must not be nil")
+
+	ecdsaK, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+	k, err := key.New(ecdsaK)
+	require.NoError(t, err)
+
+	_, err = csp.Encrypt(k, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported encryption options")
+
+	rsaK, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	k, err = key.New(rsaK)
+	require.NoError(t, err)
+
+	_, err = csp.Encrypt(k, []byte{0}, nil)
+	assert.Error(t, err)
+}
+
+func TestInvalidDecrypt(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	_, err = csp.Decrypt(nil, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key, it must not be nil")
+
+	ecdsaK, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+	k, err := key.New(ecdsaK)
+	require.NoError(t, err)
+
+	_, err = csp.Decrypt(k, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported encryption options")
+
+	rsaK, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	k, err = key.New(rsaK)
+	require.NoError(t, err)
+
+	_, err = csp.Decrypt(k, []byte{0}, nil)
+	assert.Error(t, err)
+}
+
+func TestInvalidSign(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	_, err = csp.Sign(nil, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key, must not be nil")
+
+	k, err := key.New([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
+	require.NoError(t, err)
+
+	_, err = csp.Sign(k, nil, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid digest, cannot be empty")
+
+	_, err = csp.Sign(k, []byte{0, 1, 2}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported key type")
+}
+
+func TestInvalidVerify(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	_, err = csp.Verify(nil, []byte{0}, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key, must not be nil")
+
+	k, err := key.New([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
+	require.NoError(t, err)
+
+	_, err = csp.Verify(k, nil, nil, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid signature, cannot be empty")
+
+	_, err = csp.Verify(k, []byte{0}, nil, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid digest, cannot be empty")
+
+	_, err = csp.Verify(k, []byte{0, 1, 2}, []byte{0, 1, 2}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported key type")
+}
+
+func TestInvalidHash(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	_, err = csp.Hash([]byte{0}, "")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid hash family. It must not be empty")
+
+	_, err = csp.Hash([]byte{0}, "family")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported hash family")
+}
+
+func TestInvalidGetHash(t *testing.T) {
+	csp, err := New(tempDir)
+	require.NoError(t, err)
+
+	_, err = csp.GetHash("")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid algorithm, it must not be empty")
+
+	_, err = csp.GetHash("algo")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Unsupported hash algorithm")
 }
