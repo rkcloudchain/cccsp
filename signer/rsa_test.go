@@ -72,6 +72,7 @@ func TestRSASignerSign_PKCS1v15(t *testing.T) {
 	require.NoError(t, err)
 
 	msg := []byte("bla bla message")
+
 	_, err = signer.Sign(kk, msg, nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid options, must be different from nil")
@@ -87,6 +88,46 @@ func TestRSASignerSign_PKCS1v15(t *testing.T) {
 
 	verifier := NewVerifier(RSA)
 	valid, err := verifier.Verify(kk, sigma, digest, hashFunc(func() crypto.Hash { return crypto.SHA256 }))
+	assert.NoError(t, err)
+	assert.True(t, valid)
+}
+
+func TestRSASignerWithPublicKey(t *testing.T) {
+	rsaK, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	sk, err := key.New(rsaK)
+	require.NoError(t, err)
+
+	signer := NewSigner(RSA)
+	msg := []byte("bla bla bla")
+	hf := sha3.New256()
+	hf.Write(msg)
+	digest := hf.Sum(nil)
+
+	_, err = signer.Sign(nil, digest, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid options, must be different from nil")
+
+	_, err = signer.Sign(nil, digest, &rsa.PSSOptions{})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key type, must be *key.RSAPrivateKey")
+
+	sigma, err := signer.Sign(sk, digest, &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: crypto.SHA3_256})
+	assert.NoError(t, err)
+	assert.NotNil(t, sigma)
+
+	pk, err := key.New(rsaK.PublicKey)
+	require.NoError(t, err)
+	verifier := NewVerifier(RSA)
+	_, err = verifier.Verify(nil, sigma, digest, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid options, it must not be nil")
+
+	_, err = verifier.Verify(nil, sigma, digest, &rsa.PSSOptions{})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key type, must be *key.RSAPrivateKey or *key.RSAPublicKey")
+
+	valid, err := verifier.Verify(pk, sigma, digest, &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: crypto.SHA3_256})
 	assert.NoError(t, err)
 	assert.True(t, valid)
 }

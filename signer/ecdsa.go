@@ -19,7 +19,14 @@ import (
 type ecdsaSigner struct{}
 
 func (s *ecdsaSigner) Sign(k cccsp.Key, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
-	return signECDSA(k.(*key.ECDSAPrivateKey).PrivateKey, digest)
+	var sk *ecdsa.PrivateKey
+	switch kk := k.(type) {
+	case *key.ECDSAPrivateKey:
+		sk = kk.PrivateKey
+	default:
+		return nil, errors.New("Invalid key type, must be *key.ECDSAPrivateKey")
+	}
+	return signECDSA(sk, digest)
 }
 
 func signECDSA(k *ecdsa.PrivateKey, digest []byte) ([]byte, error) {

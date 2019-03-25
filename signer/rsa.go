@@ -47,7 +47,15 @@ func (s *rsaSigner) Sign(k cccsp.Key, digest []byte, opts crypto.SignerOpts) ([]
 		return nil, errors.New("Invalid options, must be different from nil")
 	}
 
-	return k.(*key.RSAPrivateKey).PrivateKey.Sign(rand.Reader, digest, opts)
+	var sk *rsa.PrivateKey
+	switch kk := k.(type) {
+	case *key.RSAPrivateKey:
+		sk = kk.PrivateKey
+	default:
+		return nil, errors.New("Invalid key type, must be *key.RSAPrivateKey")
+	}
+
+	return sk.Sign(rand.Reader, digest, opts)
 }
 
 type rsaVerifier struct{}
