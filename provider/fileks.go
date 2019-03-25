@@ -289,5 +289,3 @@ func directoryEmpty(path string) (bool, error) {
 	}
 	return false, nil
 }
-
-
