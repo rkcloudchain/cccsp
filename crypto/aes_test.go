@@ -9,6 +9,7 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/rand"
+	"crypto/rsa"
 	"testing"
 
 	"github.com/rkcloudchain/cccsp/key"
@@ -109,4 +110,70 @@ func TestAESEncryptWithRandReader(t *testing.T) {
 	decrypted, err := decryptor.Decrypt(k, encrypted, &AESCBCPKCS7Opts{})
 	assert.NoError(t, err)
 	assert.Equal(t, ptext, decrypted)
+}
+
+func TestInvalidAESEncrypt(t *testing.T) {
+	encryptor := NewEncryptor(AES)
+	rsaK, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	k, err := key.New(rsaK)
+	require.NoError(t, err)
+
+	_, err = encryptor.Encrypt(nil, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key type, must be *key.AESPrivateKey")
+
+	_, err = encryptor.Encrypt(k, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key type, must be *key.AESPrivateKey")
+
+	aesK, err := key.New([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
+	require.NoError(t, err)
+
+	_, err = encryptor.Encrypt(aesK, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Mode not recognized")
+
+	_, err = encryptor.Encrypt(aesK, []byte{0}, &AESCBCPKCS7Opts{IV: make([]byte, 16), PRNG: rand.Reader})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid options. Either IV or PRNG should be different from nil, or both nil")
+
+	_, err = encryptor.Encrypt(aesK, nil, &AESCBCPKCS7Opts{PRNG: rand.Reader})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid key size")
+
+	keyBytes := make([]byte, 32)
+	rand.Read(keyBytes)
+	aesK, err = key.New(keyBytes)
+	require.NoError(t, err)
+
+	_, err = encryptor.Encrypt(aesK, nil, &AESCBCPKCS7Opts{PRNG: rand.Reader})
+	assert.NoError(t, err)
+}
+
+func TestInvalidDecrypt(t *testing.T) {
+	decryptor := NewDecryptor(AES)
+	rsaK, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	k, err := key.New(rsaK)
+	require.NoError(t, err)
+
+	_, err = decryptor.Decrypt(nil, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key type, must be *key.AESPrivateKey")
+
+	_, err = decryptor.Decrypt(k, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Invalid key type, must be *key.AESPrivateKey")
+
+	aesK, err := key.New([]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
+	require.NoError(t, err)
+
+	_, err = decryptor.Decrypt(aesK, []byte{0}, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Mode not recognized")
+
+	_, err = decryptor.Decrypt(aesK, nil, &AESCBCPKCS7Opts{PRNG: rand.Reader})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid key size")
 }

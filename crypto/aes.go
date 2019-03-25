@@ -21,6 +21,14 @@ import (
 type aescbcpkcs7Encryptor struct{}
 
 func (e *aescbcpkcs7Encryptor) Encrypt(k cccsp.Key, plaintext []byte, opts cccsp.EncrypterOpts) ([]byte, error) {
+	var secret []byte
+	switch kk := k.(type) {
+	case *key.AESPrivateKey:
+		secret = kk.PrivateKey
+	default:
+		return nil, errors.New("Invalid key type, must be *key.AESPrivateKey")
+	}
+
 	switch o := opts.(type) {
 	case *AESCBCPKCS7Opts:
 		if len(o.IV) != 0 && o.PRNG != nil {
@@ -29,12 +37,12 @@ func (e *aescbcpkcs7Encryptor) Encrypt(k cccsp.Key, plaintext []byte, opts cccsp
 
 		tmp := pkcs7Padding(plaintext)
 		if len(o.IV) != 0 {
-			return aesCBCEncryptWithIV(o.IV, k.(*key.AESPrivateKey).PrivateKey, tmp)
+			return aesCBCEncryptWithIV(o.IV, secret, tmp)
 		} else if o.PRNG != nil {
-			return aesCBCEncryptWithRand(o.PRNG, k.(*key.AESPrivateKey).PrivateKey, tmp)
+			return aesCBCEncryptWithRand(o.PRNG, secret, tmp)
 		}
 
-		return aesCBCEncryptWithRand(rand.Reader, k.(*key.AESPrivateKey).PrivateKey, tmp)
+		return aesCBCEncryptWithRand(rand.Reader, secret, tmp)
 	case AESCBCPKCS7Opts:
 		return e.Encrypt(k, plaintext, &o)
 	default:
@@ -96,19 +104,23 @@ func aesCBCEncryptWithRand(prng io.Reader, key, s []byte) ([]byte, error) {
 type aescbcpkcs7Decryptor struct{}
 
 func (d *aescbcpkcs7Decryptor) Decrypt(k cccsp.Key, ciphertext []byte, opts cccsp.DecrypterOpts) ([]byte, error) {
-	if opts == nil {
-		return nil, errors.New("Invalid options, must be different from nil")
+	var secret []byte
+	switch kk := k.(type) {
+	case *key.AESPrivateKey:
+		secret = kk.PrivateKey
+	default:
+		return nil, errors.New("Invalid key type, must be *key.AESPrivateKey")
 	}
 
 	switch opts.(type) {
 	case *AESCBCPKCS7Opts, AESCBCPKCS7Opts:
-		pt, err := aesCBCDecrypt(k.(*key.AESPrivateKey).PrivateKey, ciphertext)
+		pt, err := aesCBCDecrypt(secret, ciphertext)
 		if err == nil {
 			return pkcs7UnPadding(pt)
 		}
 		return nil, err
 	default:
-		return nil, errors.Errorf("Opts not recognized [%s]", opts)
+		return nil, errors.Errorf("Mode not recognized [%s]", opts)
 	}
 }
 
