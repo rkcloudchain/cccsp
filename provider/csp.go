@@ -12,6 +12,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"hash"
+	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/rkcloudchain/cccsp"
@@ -23,6 +24,20 @@ import (
 	"github.com/rkcloudchain/cccsp/signer"
 	"golang.org/x/crypto/sha3"
 )
+
+var (
+	defaultCCCSP cccsp.CCCSP
+	once         sync.Once
+)
+
+// GetDefault returns a ephemeral CCCSP
+func GetDefault() cccsp.CCCSP {
+	once.Do(func() {
+		defaultCCCSP = New(NewMemoryKeyStore())
+	})
+
+	return defaultCCCSP
+}
 
 // csp provides a generic implementation of the CCCSP interface based on wrappers.
 type csp struct {
@@ -37,12 +52,7 @@ type csp struct {
 }
 
 // New creates a csp instance
-func New(keyStorePath string) (cccsp.CCCSP, error) {
-	ks, err := NewFileKEyStore(keyStorePath)
-	if err != nil {
-		return nil, err
-	}
-
+func New(ks cccsp.KeyStore) cccsp.CCCSP {
 	csp := &csp{
 		ks:            ks,
 		keyGenerators: make(map[string]cccsp.KeyGenerator),
@@ -55,7 +65,7 @@ func New(keyStorePath string) (cccsp.CCCSP, error) {
 	}
 	csp.initialize()
 
-	return csp, nil
+	return csp
 }
 
 func (csp *csp) KeyGenerate(algorithm string, ephemeral bool) (cccsp.Key, error) {

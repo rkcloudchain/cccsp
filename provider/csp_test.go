@@ -41,8 +41,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestInvalidIdentifier(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	k, err := csp.GetKey(nil)
 	assert.Error(t, err)
@@ -54,8 +53,7 @@ func TestInvalidIdentifier(t *testing.T) {
 }
 
 func TestKeyGenerate(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	k, err := csp.KeyGenerate("ECDSA384", false)
 	assert.NoError(t, err)
@@ -87,8 +85,8 @@ func TestKeyGenerate(t *testing.T) {
 }
 
 func TestKeyIdentifier(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+
+	csp := New(NewMemoryKeyStore())
 
 	k, err := csp.KeyGenerate("ECDSA256", false)
 	assert.NoError(t, err)
@@ -113,8 +111,7 @@ func TestKeyIdentifier(t *testing.T) {
 }
 
 func TestGetKeyByIdentifier(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	k, err := csp.KeyGenerate("ECDSA521", false)
 	assert.NoError(t, err)
@@ -129,8 +126,7 @@ func TestGetKeyByIdentifier(t *testing.T) {
 }
 
 func TestPublicKeyFromPrivateKey(t *testing.T) {
-	csp, err := New(tempDir)
-	assert.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	k, err := csp.KeyGenerate("RSA4096", false)
 	assert.NoError(t, err)
@@ -144,8 +140,7 @@ func TestPublicKeyFromPrivateKey(t *testing.T) {
 }
 
 func TestPublicKeyBytes(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	k, err := csp.KeyGenerate("ECDSA521", false)
 	assert.NoError(t, err)
@@ -164,10 +159,9 @@ func TestPublicKeyBytes(t *testing.T) {
 }
 
 func TestHash(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.Hash([]byte(""), "abc")
+	_, err := csp.Hash([]byte(""), "abc")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Unsupported hash family")
 
@@ -178,8 +172,7 @@ func TestHash(t *testing.T) {
 }
 
 func TestEncryptAndDecrypt(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	ptext := []byte("Hello world")
 	k, err := csp.KeyGenerate("RSA2048", true)
@@ -198,8 +191,7 @@ func TestEncryptAndDecrypt(t *testing.T) {
 }
 
 func TestSignAndVerify(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	ptext := []byte("bla bla bla")
 	k, err := csp.KeyGenerate("ECDSA256", true)
@@ -216,8 +208,7 @@ func TestSignAndVerify(t *testing.T) {
 }
 
 func TestGetHash(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	h, err := csp.GetHash("SHA384")
 	assert.NoError(t, err)
@@ -229,8 +220,10 @@ func TestGetHash(t *testing.T) {
 }
 
 func TestAESKeyStore(t *testing.T) {
-	csp, err := New(tempDir)
+	fks, err := NewFileKEyStore(tempDir)
 	require.NoError(t, err)
+
+	csp := New(fks)
 
 	k, err := csp.KeyGenerate("AES32", false)
 	assert.NoError(t, err)
@@ -252,8 +245,10 @@ func TestAESKeyStore(t *testing.T) {
 }
 
 func TestPublicKeyStore(t *testing.T) {
-	csp, err := New(tempDir)
+	fks, err := NewFileKEyStore(tempDir)
 	require.NoError(t, err)
+
+	csp := New(fks)
 
 	k, err := csp.KeyGenerate("RSA2048", false)
 	assert.NoError(t, err)
@@ -288,10 +283,9 @@ func TestPublicKeyStore(t *testing.T) {
 }
 
 func TestInvalidKeyGenerate(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.KeyGenerate("", false)
+	_, err := csp.KeyGenerate("", false)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid algorithm, it must not be empty")
 
@@ -301,10 +295,9 @@ func TestInvalidKeyGenerate(t *testing.T) {
 }
 
 func TestInvalidKeyImport(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.KeyImport(nil, "algorithm", false)
+	_, err := csp.KeyImport(nil, "algorithm", false)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid raw, it must not be nil")
 
@@ -314,10 +307,9 @@ func TestInvalidKeyImport(t *testing.T) {
 }
 
 func TestInvalidEncrypt(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.Encrypt(nil, []byte{0}, nil)
+	_, err := csp.Encrypt(nil, []byte{0}, nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid key, it must not be nil")
 
@@ -340,10 +332,9 @@ func TestInvalidEncrypt(t *testing.T) {
 }
 
 func TestInvalidDecrypt(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.Decrypt(nil, []byte{0}, nil)
+	_, err := csp.Decrypt(nil, []byte{0}, nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid key, it must not be nil")
 
@@ -366,10 +357,9 @@ func TestInvalidDecrypt(t *testing.T) {
 }
 
 func TestInvalidSign(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.Sign(nil, []byte{0}, nil)
+	_, err := csp.Sign(nil, []byte{0}, nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid key, must not be nil")
 
@@ -386,10 +376,9 @@ func TestInvalidSign(t *testing.T) {
 }
 
 func TestInvalidVerify(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.Verify(nil, []byte{0}, []byte{0}, nil)
+	_, err := csp.Verify(nil, []byte{0}, []byte{0}, nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid key, must not be nil")
 
@@ -410,10 +399,9 @@ func TestInvalidVerify(t *testing.T) {
 }
 
 func TestInvalidHash(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.Hash([]byte{0}, "")
+	_, err := csp.Hash([]byte{0}, "")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid hash family. It must not be empty")
 
@@ -423,14 +411,18 @@ func TestInvalidHash(t *testing.T) {
 }
 
 func TestInvalidGetHash(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
-	_, err = csp.GetHash("")
+	_, err := csp.GetHash("")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Invalid algorithm, it must not be empty")
 
 	_, err = csp.GetHash("algo")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Unsupported hash algorithm")
+}
+
+func TestGetDefault(t *testing.T) {
+	csp := GetDefault()
+	assert.NotNil(t, csp)
 }

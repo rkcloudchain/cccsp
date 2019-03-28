@@ -17,8 +17,7 @@ import (
 )
 
 func TestSign(t *testing.T) {
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	k, err := csp.KeyGenerate("ECDSA384", true)
 	assert.NoError(t, err)
@@ -41,8 +40,7 @@ func TestSignerWithErrorParameter(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "cccsp instance must be different from nil")
 
-	csp, err := New(tempDir)
-	require.NoError(t, err)
+	csp := New(NewMemoryKeyStore())
 
 	_, err = NewSigner(csp, nil)
 	assert.Error(t, err)
