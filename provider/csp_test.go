@@ -220,7 +220,7 @@ func TestGetHash(t *testing.T) {
 }
 
 func TestAESKeyStore(t *testing.T) {
-	fks, err := NewFileKEyStore(tempDir)
+	fks, err := NewFileKeyStore(tempDir)
 	require.NoError(t, err)
 
 	csp := New(fks)
@@ -245,7 +245,7 @@ func TestAESKeyStore(t *testing.T) {
 }
 
 func TestPublicKeyStore(t *testing.T) {
-	fks, err := NewFileKEyStore(tempDir)
+	fks, err := NewFileKeyStore(tempDir)
 	require.NoError(t, err)
 
 	csp := New(fks)

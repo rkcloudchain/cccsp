@@ -12,11 +12,11 @@ import (
 )
 
 func TestInvalidStoreKey(t *testing.T) {
-	_, err := NewFileKEyStore("")
+	_, err := NewFileKeyStore("")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "An invalid KeyStore path provided. Path cannot be an empty string")
 
-	ks, err := NewFileKEyStore(tempDir)
+	ks, err := NewFileKeyStore(tempDir)
 	assert.NoError(t, err)
 
 	err = ks.StoreKey(nil)
@@ -25,7 +25,7 @@ func TestInvalidStoreKey(t *testing.T) {
 }
 
 func TestInvalidLoadKey(t *testing.T) {
-	ks, err := NewFileKEyStore(tempDir)
+	ks, err := NewFileKeyStore(tempDir)
 	assert.NoError(t, err)
 
 	_, err = ks.LoadKey(nil)
@@ -34,7 +34,7 @@ func TestInvalidLoadKey(t *testing.T) {
 }
 
 func TestStoreLoadKey(t *testing.T) {
-	ks, err := NewFileKEyStore(tempDir)
+	ks, err := NewFileKeyStore(tempDir)
 	assert.NoError(t, err)
 
 	ecdsaK, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)

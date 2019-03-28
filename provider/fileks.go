@@ -23,8 +23,8 @@ import (
 	"github.com/rkcloudchain/cccsp/util"
 )
 
-// NewFileKEyStore instantiated a file-based key store at a given position
-func NewFileKEyStore(path string) (cccsp.KeyStore, error) {
+// NewFileKeyStore instantiated a file-based key store at a given position
+func NewFileKeyStore(path string) (cccsp.KeyStore, error) {
 	ks := &fileKeyStore{path: path}
 	return ks, ks.initialize()
 }
