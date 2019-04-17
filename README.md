@@ -26,10 +26,16 @@ go get -u github.com/rkcloudchain/cccsp
 
 ## Example
 
-Let's start creating a cccsp instance with a keystore path.
+First of all, you need to instantiate a KeyStore object. Currently we provide two types of KeyStore: memory-based and file system based.
 
 ```go
-csp, _ := provider.New("you keystore path")
+ks, _ := provider.NewFileKeyStore("/path/to/store") // or ks := NewMemoryKeyStore()
+```
+
+Next, let's creating a cccsp instance.
+
+```go
+csp, _ := provider.New(ks)
 ```
 
 Now you can generate a new key
