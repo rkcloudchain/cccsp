@@ -9,6 +9,7 @@ package key
 import (
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"crypto/sha256"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -51,6 +52,14 @@ func (k *AESPrivateKey) Raw() ([]byte, error) {
 // Identifier returns the identifier of this key
 func (k *AESPrivateKey) Identifier() []byte {
 	hash := sha3.New256()
+	hash.Write([]byte{0x01})
+	hash.Write(k.PrivateKey)
+	return hash.Sum(nil)
+}
+
+// SKI is for compatibility with Hyperledger Fabric bccsp
+func (k *AESPrivateKey) SKI() []byte {
+	hash := sha256.New()
 	hash.Write([]byte{0x01})
 	hash.Write(k.PrivateKey)
 	return hash.Sum(nil)

@@ -8,6 +8,7 @@ package key
 
 import (
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/asn1"
 	"math/big"
@@ -40,6 +41,18 @@ func (k *RSAPrivateKey) Identifier() []byte {
 
 	raw, _ := asn1.Marshal(rsaPublicKeyASN{N: k.PrivateKey.N, E: k.PrivateKey.E})
 	hash := sha3.New256()
+	hash.Write(raw)
+	return hash.Sum(nil)
+}
+
+// SKI is for compatibility with Hyperledger Fabric bccsp
+func (k *RSAPrivateKey) SKI() []byte {
+	if k.PrivateKey == nil {
+		return nil
+	}
+
+	raw, _ := asn1.Marshal(rsaPublicKeyASN{N: k.PrivateKey.N, E: k.PrivateKey.E})
+	hash := sha256.New()
 	hash.Write(raw)
 	return hash.Sum(nil)
 }
@@ -83,6 +96,18 @@ func (k *RSAPublicKey) Identifier() []byte {
 
 	raw, _ := asn1.Marshal(rsaPublicKeyASN{N: k.PublicKey.N, E: k.PublicKey.E})
 	hash := sha3.New256()
+	hash.Write(raw)
+	return hash.Sum(nil)
+}
+
+// SKI is for compatibility with Hyperledger Fabric bccsp
+func (k *RSAPublicKey) SKI() []byte {
+	if k.PublicKey == nil {
+		return nil
+	}
+
+	raw, _ := asn1.Marshal(rsaPublicKeyASN{N: k.PublicKey.N, E: k.PublicKey.E})
+	hash := sha256.New()
 	hash.Write(raw)
 	return hash.Sum(nil)
 }

@@ -9,6 +9,7 @@ package key
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/sha256"
 	"crypto/x509"
 
 	"github.com/pkg/errors"
@@ -34,6 +35,18 @@ func (k *ECDSAPrivateKey) Identifier() []byte {
 
 	raw := elliptic.Marshal(k.Curve, k.PublicKey.X, k.PublicKey.Y)
 	hash := sha3.New256()
+	hash.Write(raw)
+	return hash.Sum(nil)
+}
+
+// SKI is for compatibility with Hyperledger Fabric bccsp
+func (k *ECDSAPrivateKey) SKI() []byte {
+	if k.PrivateKey == nil {
+		return nil
+	}
+
+	raw := elliptic.Marshal(k.PrivateKey.Curve, k.PrivateKey.X, k.PrivateKey.Y)
+	hash := sha256.New()
 	hash.Write(raw)
 	return hash.Sum(nil)
 }
@@ -76,6 +89,18 @@ func (k *ECDSAPublicKey) Identifier() []byte {
 
 	raw := elliptic.Marshal(k.PublicKey.Curve, k.PublicKey.X, k.PublicKey.Y)
 	hash := sha3.New256()
+	hash.Write(raw)
+	return hash.Sum(nil)
+}
+
+// SKI is for compatibility with Hyperledger Fabric bccsp
+func (k *ECDSAPublicKey) SKI() []byte {
+	if k.PublicKey == nil {
+		return nil
+	}
+
+	raw := elliptic.Marshal(k.PublicKey.Curve, k.PublicKey.X, k.PublicKey.Y)
+	hash := sha256.New()
 	hash.Write(raw)
 	return hash.Sum(nil)
 }

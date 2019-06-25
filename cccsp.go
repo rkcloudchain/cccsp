@@ -19,6 +19,9 @@ type Key interface {
 	// Identifier returns the identifier of this key
 	Identifier() []byte
 
+	// SKI is for compatibility with Hyperledger Fabric bccsp
+	SKI() []byte
+
 	// Private returns true if this key is a private key.
 	// false otherwise
 	Private() bool
